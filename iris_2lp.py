@@ -28,24 +28,29 @@ class Perceptron:
     def train(self, x, y, learning_rate=0.1, epochs=100):
         for epoch in range(epochs):
             for i in range(len(x)):
+                x_i = np.array(x[i])
                 Yh = self.predict(x[i])
                 loss = self._categorical_crossentropy(y[i], Yh)
+
                 dloss_Yh = self._dcategorical_crossentropy(y[i], Yh)
-                # dloss_Z2 = dloss_Yh * self._dsoftmax(self.Z2)
-                dloss_Z2 = np.dot(dloss_Yh, self._dsoftmax(self.Z2))
+                dloss_A2 = dloss_Yh
+
+                dloss_Z2 = np.dot(dloss_A2, self._dsoftmax(self.Z2))
+                # dot product instead of "*" because dsoftmax given (n,) returns (n,n)
+                # drelu, dsigmoid return (n,)
                 dLoss_A1 = np.dot(self.W2.T, dloss_Z2)
                 dloss_W2 = np.kron(dloss_Z2, self.A1).reshape(self.num_classes, self.num_hidden_units)
-                # Calculate activations of hidden units
-                hidden_activations = np.dot(self.W1, x[i]) + self.B1
-                # Apply activation function to hidden activations
-                hidden_output = self._sigmoid(hidden_activations)
-                # Update weights and biases
-                self.W2 += (learning_rate * loss * hidden_output[:, np.newaxis]).reshape(self.num_classes,
-                                                                                         self.num_hidden_units)
-                self.B2 += learning_rate * loss
-                self.W1 += np.kron(learning_rate * hidden_output * (1 - hidden_output), x[i]).reshape(
-                    self.num_hidden_units, self.num_features)
-                self.B1 += learning_rate * hidden_output * (1 - hidden_output)
+                dloss_B2 = dloss_Z2
+
+                dloss_Z1 = dLoss_A1 * self._dsigmoid(self.Z1)
+                # dloss_A0 skipped
+                dloss_W1 = np.kron(dloss_Z1, x_i).reshape(self.num_hidden_units, x_i.shape[0])
+                dloss_B1 = dloss_Z1
+
+                self.W2 -= learning_rate * dloss_W2
+                self.B2 -= learning_rate * dloss_B2
+                self.W1 -= learning_rate * dloss_W1
+                self.B1 -= learning_rate * dloss_B1
 
     def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
