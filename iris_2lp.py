@@ -2,11 +2,12 @@ import numpy as np
 
 
 class Perceptron:
-    def __init__(self, num_features, num_hidden_units, num_classes):
+    def __init__(self, num_features, num_hidden_units_1, num_hidden_units_2, num_classes):
         self.num_features = num_features
-        self.num_hidden_units = num_hidden_units
+        self.num_hidden_units_1 = num_hidden_units_1
+        self.num_hidden_units_2 = num_hidden_units_2
         self.num_classes = num_classes
-        self.num_layers = 2
+        self.num_layers = 3
         self.W = []
         self.B = []
         self.Z = []
@@ -15,9 +16,11 @@ class Perceptron:
         self.losses = []
 
     def _init_params(self):
-        self.W.append(np.random.rand(self.num_hidden_units, self.num_features))
-        self.W.append(np.random.rand(self.num_classes, self.num_hidden_units))
-        self.B.append(np.random.rand(self.num_hidden_units))
+        self.W.append(np.random.rand(self.num_hidden_units_1, self.num_features))
+        self.W.append(np.random.rand(self.num_hidden_units_2, self.num_hidden_units_1))
+        self.W.append(np.random.rand(self.num_classes, self.num_hidden_units_2))
+        self.B.append(np.random.rand(self.num_hidden_units_1))
+        self.B.append(np.random.rand(self.num_hidden_units_2))
         self.B.append(np.random.rand(self.num_classes))
         for _ in range(self.num_layers):
             # create list placeholders for Z and A
@@ -26,16 +29,19 @@ class Perceptron:
 
     def predict(self, X):
         Z1 = np.dot(self.W[0], X) + self.B[0]
-        # self.Z1 = Z1
         self.Z[0] = Z1
         A1 = self._sigmoid(Z1)
-        # self.A1 = A1
         self.A[0] = A1
+
         Z2 = np.dot(self.W[1], A1) + self.B[1]
-        # self.Z2 = Z2
         self.Z[1] = Z2
-        A2 = self._softmax(Z2)
-        return A2
+        A2 = self._sigmoid(Z2)
+        self.A[1] = A2
+
+        Z3 = np.dot(self.W[2], A2) + self.B[2]
+        self.Z[2] = Z3
+        A3 = self._sigmoid(Z3)
+        return A3
 
     def train(self, x, y, learning_rate=0.1, epochs=100):
         for epoch in range(epochs):
@@ -48,24 +54,29 @@ class Perceptron:
 
                 dloss_Yh = self._dcategorical_crossentropy(y[i], Yh)
                 dloss_A2 = dloss_Yh
-
-                dloss_Z2 = np.dot(dloss_A2, self._dsoftmax(self.Z[1]))
-                # dot product instead of "*" because dsoftmax given (n,) returns (n,n)
-                # drelu, dsigmoid return (n,)
-                dLoss_A1 = np.dot(self.W[1].T, dloss_Z2)
-                dloss_W2 = np.kron(dloss_Z2, self.A[0]).reshape(self.num_classes, self.num_hidden_units)
+                dloss_Z2 = np.dot(dloss_A2, self._dsoftmax(self.Z[2]))
+                dLoss_A1 = np.dot(self.W[2].T, dloss_Z2)
+                dloss_W2 = np.kron(dloss_Z2, self.A[1]).reshape(self.num_classes, self.num_hidden_units_2)
                 dloss_B2 = dloss_Z2
 
-                dloss_Z1 = dLoss_A1 * self._dsigmoid(self.Z[0])
-                # dloss_A0 skipped
-                dloss_W1 = np.kron(dloss_Z1, x_i).reshape(self.num_hidden_units, x_i.shape[0])
+                dloss_Z1 = dLoss_A1 * self._dsigmoid(self.Z[1])
+                dLoss_A0 = np.dot(self.W[1].T, dloss_Z1)
+                dloss_W1 = np.kron(dloss_Z1, self.A[0]).reshape(self.num_hidden_units_2, self.num_hidden_units_1)
                 dloss_B1 = dloss_Z1
 
-                self.W[1] -= learning_rate * dloss_W2
-                self.B[1] -= learning_rate * dloss_B2
+                dloss_Z0 = dLoss_A0 * self._dsigmoid(self.Z[0])
+                dloss_W0 = np.kron(dloss_Z0, x_i).reshape(self.num_hidden_units_1, self.num_features)
+                dloss_B0 = dloss_Z0
 
-                self.W[0] -= learning_rate * dloss_W1
-                self.B[0] -= learning_rate * dloss_B1
+
+                self.W[2] -= learning_rate * dloss_W2
+                self.B[2] -= learning_rate * dloss_B2
+
+                self.W[1] -= learning_rate * dloss_W1
+                self.B[1] -= learning_rate * dloss_B1
+
+                self.W[0] -= learning_rate * dloss_W0
+                self.B[0] -= learning_rate * dloss_B0
             self.losses.append(total_losses / len(x))
             if epoch % 50 == 0:
                 print(f"epoch: {epoch}; loss: {self.losses[-1]}")
@@ -113,9 +124,9 @@ X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 # perceptron = Perceptron(4, 16, 3)
-perceptron = Perceptron(13, 32, 3)
+perceptron = Perceptron(13, 3, 2, 3)
 
-perceptron.train(X_train, y_train, learning_rate=0.01, epochs=900)
+perceptron.train(X_train, y_train, learning_rate=0.001, epochs=200)
 
 # predictions
 y_pred = []
@@ -133,4 +144,4 @@ for pred, g_truth in zip(y_pred, y_test):
 
 print(T / (T + F))
 print()
-# print(perceptron.losses)
+print(perceptron.losses)
