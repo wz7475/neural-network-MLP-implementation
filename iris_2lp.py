@@ -74,7 +74,11 @@ class Perceptron:
                 self.B[0] -= learning_rate * dloss_B1
             self.losses.append(total_losses / len(x))
             if epoch % 50 == 0:
-                print(f"epoch: {epoch}; loss: {self.losses[-1]}")
+                train_cross_entripy = self._categorical_crossentropy(y, self.predict_batch(x)) / len(y)
+                print(f"epoch: {epoch}; train loss: {train_cross_entripy}")
+                val_cross_entripy = self._categorical_crossentropy(y_test, self.predict_batch(X_test)) / len(y_test)
+                print(f"validation loss: {val_cross_entripy}")
+                print()
 
     def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
