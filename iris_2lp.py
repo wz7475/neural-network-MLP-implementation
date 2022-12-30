@@ -20,7 +20,7 @@ class Perceptron:
         # Calculate activations of output units
         output_activations = np.dot(self.weights_hidden_to_output, hidden_output) + self.bias_output
         # Apply activation function to output activations
-        output = self._sigmoid(output_activations)
+        output = self._softmax(output_activations)
         return output
 
     def train(self, x, y, learning_rate=0.1, epochs=100):
@@ -78,10 +78,10 @@ for label in y:
     y_cat.append(converter[label])
 
 
-perceptron = Perceptron(4, 8, 3)
+perceptron = Perceptron(4, 16, 3)
 
 
-perceptron.train(X_train, y_train)
+perceptron.train(X_train, y_train, learning_rate=0.01, epochs=40)
 
 # predictions
 y_pred = []
