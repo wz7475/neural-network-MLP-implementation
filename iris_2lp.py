@@ -56,6 +56,8 @@ class Perceptron:
                 self.W1 -= learning_rate * dloss_W1
                 self.B1 -= learning_rate * dloss_B1
             self.losses.append(total_losses / len(x))
+            if epoch % 50 == 0:
+                print(f"epoch: {epoch}; loss: {self.losses[-1]}" )
 
     def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -102,7 +104,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 perceptron = Perceptron(4, 16, 3)
 
-perceptron.train(X_train, y_train, learning_rate=0.01, epochs=40)
+perceptron.train(X_train, y_train, learning_rate=0.01, epochs=5000)
 
 # predictions
 y_pred = []
@@ -120,4 +122,4 @@ for pred, g_truth in zip(y_pred, y_test):
 
 print(T / (T + F))
 print()
-print(perceptron.losses)
+# print(perceptron.losses)
