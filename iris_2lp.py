@@ -37,6 +37,12 @@ class Perceptron:
         A2 = self._softmax(Z2)
         return A2
 
+    def predict_batch(self, X):
+        predictions = []
+        for element in X:
+            predictions.append(self.predict(element))
+        return np.array(predictions)
+
     def train(self, x, y, learning_rate=0.1, epochs=100):
         for epoch in range(epochs):
             total_losses = 0
@@ -134,3 +140,4 @@ for pred, g_truth in zip(y_pred, y_test):
 print(T / (T + F))
 print()
 # print(perceptron.losses)
+print(perceptron.predict_batch(X_test))
