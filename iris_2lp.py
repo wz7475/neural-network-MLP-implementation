@@ -10,6 +10,7 @@ class Perceptron:
         self.W2 = np.zeros((num_classes, num_hidden_units))
         self.B1 = np.zeros(num_hidden_units)
         self.B2 = np.zeros(num_classes)
+        self.losses = []
 
     def predict(self, X):
         # Calculate activations of hidden units
@@ -23,14 +24,17 @@ class Perceptron:
         self.Z2 = Z2
         # Apply activation function to output activations
         A2 = self._softmax(Z2)
+
         return A2
 
     def train(self, x, y, learning_rate=0.1, epochs=100):
         for epoch in range(epochs):
+            total_losses = 0
             for i in range(len(x)):
                 x_i = np.array(x[i])
                 Yh = self.predict(x[i])
                 loss = self._categorical_crossentropy(y[i], Yh)
+                total_losses += loss
 
                 dloss_Yh = self._dcategorical_crossentropy(y[i], Yh)
                 dloss_A2 = dloss_Yh
@@ -51,6 +55,7 @@ class Perceptron:
                 self.B2 -= learning_rate * dloss_B2
                 self.W1 -= learning_rate * dloss_W1
                 self.B1 -= learning_rate * dloss_B1
+            self.losses.append(total_losses / len(x))
 
     def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -108,9 +113,11 @@ for element in X_test:
 T = 0
 F = 0
 for pred, g_truth in zip(y_pred, y_test):
-    if np.argmax(pred, axis=0) == g_truth.index(1):
+    if np.argmax(pred, axis=0) == np.where(g_truth == 1)[0][0]:
         T += 1
     else:
         F += 1
 
 print(T / (T + F))
+print()
+print(perceptron.losses)
