@@ -6,10 +6,10 @@ class Perceptron:
         self.num_features = num_features
         self.num_hidden_units = num_hidden_units
         self.num_classes = num_classes
-        self.W1 = np.zeros((num_hidden_units, num_features))
-        self.W2 = np.zeros((num_classes, num_hidden_units))
-        self.B1 = np.zeros(num_hidden_units)
-        self.B2 = np.zeros(num_classes)
+        self.W1 = np.random.rand(num_hidden_units, num_features)
+        self.W2 = np.random.rand(num_classes, num_hidden_units)
+        self.B1 = np.random.rand(num_hidden_units)
+        self.B2 = np.random.rand(num_classes)
         self.losses = []
 
     def predict(self, X):
