@@ -86,8 +86,8 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn import datasets
 
-# Load the Wine dataset
-X, y = datasets.load_iris(return_X_y=True)
+# X, y = datasets.load_iris(return_X_y=True)
+X, y = datasets.load_wine(return_X_y=True)
 y_cat = []
 converter = {
     0: [1, 0, 0],
@@ -102,9 +102,10 @@ X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 
-perceptron = Perceptron(4, 16, 3)
+# perceptron = Perceptron(4, 16, 3)
+perceptron = Perceptron(13, 32, 3)
 
-perceptron.train(X_train, y_train, learning_rate=0.01, epochs=5000)
+perceptron.train(X_train, y_train, learning_rate=0.01, epochs=900)
 
 # predictions
 y_pred = []
