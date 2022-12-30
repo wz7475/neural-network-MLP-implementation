@@ -6,25 +6,30 @@ class Perceptron:
         self.num_features = num_features
         self.num_hidden_units = num_hidden_units
         self.num_classes = num_classes
-        self.W1 = np.random.rand(num_hidden_units, num_features)
-        self.W2 = np.random.rand(num_classes, num_hidden_units)
-        self.B1 = np.random.rand(num_hidden_units)
-        self.B2 = np.random.rand(num_classes)
+        self.W = []
+        self.B = []
+        # self.Z = []
+        # self.A = []
+        self._init_weights()
         self.losses = []
 
+    def _init_weights(self):
+        self.W.append(np.random.rand(self.num_hidden_units, self.num_features))
+        self.W.append(np.random.rand(self.num_classes, self.num_hidden_units))
+        self.B.append(np.random.rand(self.num_hidden_units))
+        self.B.append(np.random.rand(self.num_classes))
+
     def predict(self, X):
-        # Calculate activations of hidden units
-        Z1 = np.dot(self.W1, X) + self.B1
+        Z1 = np.dot(self.W[0], X) + self.B[0]
         self.Z1 = Z1
-        # Apply activation function to hidden activations
+        # self.Z.append(Z1)
         A1 = self._sigmoid(Z1)
         self.A1 = A1
-        # Calculate activations of output units
-        Z2 = np.dot(self.W2, A1) + self.B2
+        # self.A.append(A1)
+        Z2 = np.dot(self.W[1], A1) + self.B[1]
         self.Z2 = Z2
-        # Apply activation function to output activations
+        # self.Z.append(Z2)
         A2 = self._softmax(Z2)
-
         return A2
 
     def train(self, x, y, learning_rate=0.1, epochs=100):
@@ -42,7 +47,7 @@ class Perceptron:
                 dloss_Z2 = np.dot(dloss_A2, self._dsoftmax(self.Z2))
                 # dot product instead of "*" because dsoftmax given (n,) returns (n,n)
                 # drelu, dsigmoid return (n,)
-                dLoss_A1 = np.dot(self.W2.T, dloss_Z2)
+                dLoss_A1 = np.dot(self.W[1].T, dloss_Z2)
                 dloss_W2 = np.kron(dloss_Z2, self.A1).reshape(self.num_classes, self.num_hidden_units)
                 dloss_B2 = dloss_Z2
 
@@ -51,13 +56,14 @@ class Perceptron:
                 dloss_W1 = np.kron(dloss_Z1, x_i).reshape(self.num_hidden_units, x_i.shape[0])
                 dloss_B1 = dloss_Z1
 
-                self.W2 -= learning_rate * dloss_W2
-                self.B2 -= learning_rate * dloss_B2
-                self.W1 -= learning_rate * dloss_W1
-                self.B1 -= learning_rate * dloss_B1
+                self.W[1] -= learning_rate * dloss_W2
+                self.B[1] -= learning_rate * dloss_B2
+
+                self.W[0] -= learning_rate * dloss_W1
+                self.B[0] -= learning_rate * dloss_B1
             self.losses.append(total_losses / len(x))
             if epoch % 50 == 0:
-                print(f"epoch: {epoch}; loss: {self.losses[-1]}" )
+                print(f"epoch: {epoch}; loss: {self.losses[-1]}")
 
     def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -100,7 +106,6 @@ scaler = MinMaxScaler()
 X = scaler.fit_transform(X)
 # Split the dataset into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
-
 
 # perceptron = Perceptron(4, 16, 3)
 perceptron = Perceptron(13, 32, 3)
