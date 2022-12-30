@@ -27,7 +27,7 @@ class Perceptron:
             self.Z.append(None)
             self.A.append(None)
 
-    def predict(self, X):
+    def predict_sample(self, X):
         Z1 = np.dot(self.W[0], X) + self.B[0]
         self.Z[0] = Z1
         A1 = self._sigmoid(Z1)
@@ -43,12 +43,18 @@ class Perceptron:
         A3 = self._sigmoid(Z3)
         return A3
 
+    def predict_batch(self, X):
+        predictions = []
+        for element in X:
+            predictions.append(self.predict_sample(element))
+        return np.array(predictions)
+
     def train(self, x, y, learning_rate=0.1, epochs=100):
         for epoch in range(epochs):
             total_losses = 0
             for i in range(len(x)):
                 x_i = np.array(x[i])
-                Yh = self.predict(x[i])
+                Yh = self.predict_sample(x[i])
                 loss = self._categorical_crossentropy(y[i], Yh)
                 total_losses += loss
 
@@ -109,7 +115,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import datasets
 
 # X, y = datasets.load_iris(return_X_y=True)
-X, y = datasets.load_wine(return_X_y=True)
+X, y = datasets.load_iris(return_X_y=True)
 y_cat = []
 converter = {
     0: [1, 0, 0],
@@ -124,14 +130,14 @@ X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 # perceptron = Perceptron(4, 16, 3)
-perceptron = Perceptron(13, 3, 2, 3)
+perceptron = Perceptron(4, 3, 2, 3)
 
-perceptron.train(X_train, y_train, learning_rate=0.001, epochs=200)
+perceptron.train(X_train, y_train, learning_rate=0.01, epochs=100)
 
 # predictions
 y_pred = []
 for element in X_test:
-    y_pred.append(perceptron.predict(element))
+    y_pred.append(perceptron.predict_sample(element))
 
 # accuracy
 T = 0
@@ -141,6 +147,8 @@ for pred, g_truth in zip(y_pred, y_test):
         T += 1
     else:
         F += 1
+
+print(perceptron.predict_batch(X_test))
 
 print(T / (T + F))
 print()
