@@ -6,29 +6,34 @@ class Perceptron:
         self.num_features = num_features
         self.num_hidden_units = num_hidden_units
         self.num_classes = num_classes
+        self.num_layers = 2
         self.W = []
         self.B = []
-        # self.Z = []
-        # self.A = []
-        self._init_weights()
+        self.Z = []
+        self.A = []
+        self._init_params()
         self.losses = []
 
-    def _init_weights(self):
+    def _init_params(self):
         self.W.append(np.random.rand(self.num_hidden_units, self.num_features))
         self.W.append(np.random.rand(self.num_classes, self.num_hidden_units))
         self.B.append(np.random.rand(self.num_hidden_units))
         self.B.append(np.random.rand(self.num_classes))
+        for _ in range(self.num_layers):
+            # create list placeholders for Z and A
+            self.Z.append(None)
+            self.A.append(None)
 
     def predict(self, X):
         Z1 = np.dot(self.W[0], X) + self.B[0]
-        self.Z1 = Z1
-        # self.Z.append(Z1)
+        # self.Z1 = Z1
+        self.Z[0] = Z1
         A1 = self._sigmoid(Z1)
-        self.A1 = A1
-        # self.A.append(A1)
+        # self.A1 = A1
+        self.A[0] = A1
         Z2 = np.dot(self.W[1], A1) + self.B[1]
-        self.Z2 = Z2
-        # self.Z.append(Z2)
+        # self.Z2 = Z2
+        self.Z[1] = Z2
         A2 = self._softmax(Z2)
         return A2
 
@@ -44,14 +49,14 @@ class Perceptron:
                 dloss_Yh = self._dcategorical_crossentropy(y[i], Yh)
                 dloss_A2 = dloss_Yh
 
-                dloss_Z2 = np.dot(dloss_A2, self._dsoftmax(self.Z2))
+                dloss_Z2 = np.dot(dloss_A2, self._dsoftmax(self.Z[1]))
                 # dot product instead of "*" because dsoftmax given (n,) returns (n,n)
                 # drelu, dsigmoid return (n,)
                 dLoss_A1 = np.dot(self.W[1].T, dloss_Z2)
-                dloss_W2 = np.kron(dloss_Z2, self.A1).reshape(self.num_classes, self.num_hidden_units)
+                dloss_W2 = np.kron(dloss_Z2, self.A[0]).reshape(self.num_classes, self.num_hidden_units)
                 dloss_B2 = dloss_Z2
 
-                dloss_Z1 = dLoss_A1 * self._dsigmoid(self.Z1)
+                dloss_Z1 = dLoss_A1 * self._dsigmoid(self.Z[0])
                 # dloss_A0 skipped
                 dloss_W1 = np.kron(dloss_Z1, x_i).reshape(self.num_hidden_units, x_i.shape[0])
                 dloss_B1 = dloss_Z1
