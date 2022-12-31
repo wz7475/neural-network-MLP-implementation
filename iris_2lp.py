@@ -3,9 +3,10 @@ import numpy as np
 
 class Perceptron:
     def __init__(self, num_features, num_hidden_units_1, num_hidden_units_2, num_hidden_units_3, num_classes,
-                 activations):
+                 activations, loss_function):
         self.num_features = num_features
         self.activations = activations
+        self.loss_function = loss_function
         self.num_hidden_units_1 = num_hidden_units_1
         self.num_hidden_units_2 = num_hidden_units_2
         self.num_hidden_units_3 = num_hidden_units_3
@@ -67,11 +68,11 @@ class Perceptron:
             for i in range(len(x_train)):
                 x_i = np.array(x_train[i])
                 Yh = self.predict_sample(x_train[i])
-                loss = self._categorical_crossentropy(y_train[i], Yh)
+                loss = self.loss_function(y_train[i], Yh)
                 total_losses += loss
 
                 # output layer
-                dloss_Yh = self._dcategorical_crossentropy(y_train[i], Yh)
+                dloss_Yh = self.loss_function(y_train[i], Yh, der=True)
                 dloss_A3 = dloss_Yh
                 dloss_Z3 = np.dot(dloss_A3, self.activations[-1](self.Z[-1], der=True))
                 dloss_A2 = np.dot(self.W[-1].T, dloss_Z3)
@@ -112,9 +113,9 @@ class Perceptron:
             self.history["train_acc"].append(self.score(x_train, y_train))
             self.history["val_acc"].append(self.score(x_test, y_test))
             self.history["train_loss"].append(
-                self._categorical_crossentropy(y_train, self.predict_batch(x_train)) / len(y_train))
+                self.loss_function(y_train, self.predict_batch(x_train)) / len(y_train))
             self.history["val_loss"].append(
-                self._categorical_crossentropy(y_test, self.predict_batch(x_test)) / len(y_test))
+                self.loss_function(y_test, self.predict_batch(x_test)) / len(y_test))
             if epoch % 50 == 0:
                 print(
                     f"epoch: {epoch}; train loss: {self.history['train_loss'][-1]}; val loss: {self.history['val_loss'][-1]}")
@@ -124,14 +125,12 @@ class Perceptron:
         predictions = self.predict_batch(X)
         return np.sum(np.argmax(predictions, axis=1) == np.argmax(y, axis=1)) / len(y)
 
-    def _categorical_crossentropy(self, y_true, y_pred):
-        # Ensure that y_pred is a valid probability distribution
-        y_pred = np.clip(y_pred, 1e-9, 1 - 1e-9)
-        # Calculate the negative log-likelihood of the true class
-        return -np.sum(y_true * np.log(y_pred))
 
-    def _dcategorical_crossentropy(self, y_true, y_pred):
+def ccategorical_crossentropy(y_true, y_pred, der=False):
+    if der:
         return (y_pred - y_true) / y_true.shape
+    y_pred = np.clip(y_pred, 1e-9, 1 - 1e-9)
+    return -np.sum(y_true * np.log(y_pred))
 
 
 def sigmoid(x, der=False):
@@ -152,7 +151,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import datasets
 
 # X, y = datasets.load_iris(return_X_y=True)
-X, y = datasets.load_iris(return_X_y=True)
+X, y = datasets.load_wine(return_X_y=True)
 y_cat = []
 converter = {
     0: [1, 0, 0],
@@ -168,7 +167,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 # perceptron = Perceptron(4, 16, 3)
 activations = [sigmoid, sigmoid, sigmoid, softmax]
-perceptron = Perceptron(4, 8, 8, 4, 3, activations)
+perceptron = Perceptron(13, 8, 8, 4, 3, activations, loss_function=ccategorical_crossentropy)
 
 perceptron.train(X_train, y_train, X_test, y_test, learning_rate=0.01, epochs=800)
 
