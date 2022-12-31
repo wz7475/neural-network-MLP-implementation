@@ -88,10 +88,10 @@ class Perceptron:
                 # output layer
                 dloss_Yh = self.loss_function(y_train[i], Yh, der=True)
                 dloss_A3 = dloss_Yh
-                dloss_Z3 = np.dot(dloss_A3, self.activations[-1](self.Z[-1], der=True))
-                dloss_A2 = np.dot(self.W[-1].T, dloss_Z3)
-                dloss_W3 = np.kron(dloss_Z3, self.A[-1]).reshape(self.num_classes, self.hidden_layers[last_hidden])
-                dloss_B3 = dloss_Z3
+                dloss_Z = np.dot(dloss_A3, self.activations[-1](self.Z[-1], der=True))
+                dloss_A = np.dot(self.W[-1].T, dloss_Z)
+                dloss_W3 = np.kron(dloss_Z, self.A[-1]).reshape(self.num_classes, self.hidden_layers[last_hidden])
+                dloss_B3 = dloss_Z
 
 
                 hd_dloss_Z = []
@@ -100,29 +100,40 @@ class Perceptron:
                 hd_dloss_B = []
 
                 # last hidden layer
-                dloss_Z2 = dloss_A2 * self.activations[last_hidden](self.Z[last_hidden], der=True)
-                hd_dloss_Z.insert(0, dloss_Z2)
-                dLoss_A1 = np.dot(self.W[last_hidden].T, dloss_Z2)
-                hd_dloss_A.insert(0, dLoss_A1)
-                dloss_W2 = np.kron(dloss_Z2, self.A[last_hidden - 1]).reshape(self.hidden_layers[last_hidden],
-                                                                              self.hidden_layers[last_hidden - 1])
-                hd_dloss_W.insert(0, dloss_W2)
-                dloss_B2 = dloss_Z2
-                hd_dloss_B.insert(0, dloss_B2)
+                # dloss_Z2 = dloss_A2 * self.activations[last_hidden](self.Z[last_hidden], der=True)
+                # hd_dloss_Z.insert(0, dloss_Z2)
+                # dLoss_A1 = np.dot(self.W[last_hidden].T, dloss_Z2)
+                # hd_dloss_A.insert(0, dLoss_A1)
+                # dloss_W2 = np.kron(dloss_Z2, self.A[last_hidden - 1]).reshape(self.hidden_layers[last_hidden],
+                #                                                               self.hidden_layers[last_hidden - 1])
+                # hd_dloss_W.insert(0, dloss_W2)
+                # dloss_B2 = dloss_Z2
+                # hd_dloss_B.insert(0, dloss_B2)
+                #
+                # # first hidden layer
+                # dloss_Z1 = dLoss_A1 * self.activations[first_hidden](self.Z[first_hidden], der=True)
+                # hd_dloss_Z.insert(0, dloss_Z1)
+                # dLoss_A0 = np.dot(self.W[first_hidden].T, dloss_Z1)
+                # hd_dloss_A.insert(0, dLoss_A0)
+                # dloss_W1 = np.kron(dloss_Z1, self.A[first_hidden - 1]).reshape(self.hidden_layers[first_hidden],
+                #                                                                self.hidden_layers[first_hidden - 1])
+                # hd_dloss_W.insert(0, dloss_W1)
+                # dloss_B1 = dloss_Z1
+                # hd_dloss_B.insert(0, dloss_B1)
 
-                # first hidden layer
-                dloss_Z1 = dLoss_A1 * self.activations[first_hidden](self.Z[first_hidden], der=True)
-                hd_dloss_Z.insert(0, dloss_Z1)
-                dLoss_A0 = np.dot(self.W[first_hidden].T, dloss_Z1)
-                hd_dloss_A.insert(0, dLoss_A0)
-                dloss_W1 = np.kron(dloss_Z1, self.A[first_hidden - 1]).reshape(self.hidden_layers[first_hidden],
-                                                                               self.hidden_layers[first_hidden - 1])
-                hd_dloss_W.insert(0, dloss_W1)
-                dloss_B1 = dloss_Z1
-                hd_dloss_B.insert(0, dloss_B1)
+                for i_hd_lay in reversed(range(first_hidden, last_hidden+1)):
+                    dloss_Z = dloss_A * self.activations[i_hd_lay](self.Z[i_hd_lay], der=True)
+                    hd_dloss_Z.insert(0, dloss_Z)
+                    dloss_A = np.dot(self.W[i_hd_lay].T, dloss_Z)
+                    hd_dloss_A.insert(0, dloss_A)
+                    dloss_W1 = np.kron(dloss_Z, self.A[i_hd_lay - 1]).reshape(self.hidden_layers[i_hd_lay],
+                                                                                   self.hidden_layers[i_hd_lay - 1])
+                    hd_dloss_W.insert(0, dloss_W1)
+                    dloss_B1 = dloss_Z
+                    hd_dloss_B.insert(0, dloss_B1)
 
                 # input layer
-                dloss_Z0 = dLoss_A0 * self.activations[0](self.Z[0], der=True)
+                dloss_Z0 = dloss_A * self.activations[0](self.Z[0], der=True)
                 dloss_W0 = np.kron(dloss_Z0, x_i).reshape(self.hidden_layers[0], self.num_features)
                 dloss_B0 = dloss_Z0
 
