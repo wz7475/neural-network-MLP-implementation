@@ -17,14 +17,18 @@ class Perceptron:
         self._init_params()
 
     def _init_params(self):
-        self.W.append(np.random.rand(self.hidden_layers[0], self.num_features))
-        self.W.append(np.random.rand(self.hidden_layers[1], self.hidden_layers[0]))
-        self.W.append(np.random.rand(self.hidden_layers[2], self.hidden_layers[1]))
-        self.W.append(np.random.rand(self.num_classes, self.hidden_layers[2]))
-        self.B.append(np.random.rand(self.hidden_layers[0]))
+        self.W.append(np.random.rand(self.hidden_layers[0], self.num_features)) # input - hidden
+        first_hidden = 0
+        last_hidden = self.num_layers - 2
+        for i in range(first_hidden, last_hidden):
+            self.W.append(np.random.rand(self.hidden_layers[i+1], self.hidden_layers[i]))
+        # self.W.append(np.random.rand(self.hidden_layers[1], self.hidden_layers[0]))
+        # self.W.append(np.random.rand(self.hidden_layers[2], self.hidden_layers[1]))
+        self.W.append(np.random.rand(self.num_classes, self.hidden_layers[2])) # hidden - output
+        self.B.append(np.random.rand(self.hidden_layers[0])) # input
         self.B.append(np.random.rand(self.hidden_layers[1]))
         self.B.append(np.random.rand(self.hidden_layers[2]))
-        self.B.append(np.random.rand(self.num_classes))
+        self.B.append(np.random.rand(self.num_classes)) # output
         for _ in range(self.num_layers):
             # create list placeholders for Z and A
             self.Z.append(None)
@@ -38,20 +42,26 @@ class Perceptron:
         A0 = self.activations[0](Z0)
         self.A[0] = A0
 
-        Z1 = np.dot(self.W[1], A0) + self.B[1]
-        self.Z[1] = Z1
-        A1 = self.activations[1](Z1)
-        self.A[1] = A1
+        # Z1 = np.dot(self.W[1], A0) + self.B[1]
+        # self.Z[1] = Z1
+        # A1 = self.activations[1](Z1)
+        # self.A[1] = A1
+        #
+        # Z2 = np.dot(self.W[2], A1) + self.B[2]
+        # self.Z[2] = Z2
+        # A2 = self.activations[2](Z2)
+        # self.A[2] = A2
 
-        Z2 = np.dot(self.W[2], A1) + self.B[2]
-        self.Z[2] = Z2
-        A2 = self.activations[2](Z2)
-        self.A[2] = A2
+        for i in range(1, self.num_layers-1):
+            Z = np.dot(self.W[i], self.A[i-1]) + self.B[i]
+            self.Z[i] = Z
+            A = self.activations[i](Z)
+            self.A[i] = A
 
-        Z3 = np.dot(self.W[3], A2) + self.B[3]
-        self.Z[3] = Z3
-        A3 = self.activations[3](Z3)
-        return A3
+        Z_last = np.dot(self.W[-1], self.A[-1]) + self.B[-1]
+        self.Z[-1] = Z_last
+        A_last = self.activations[-1](Z_last)
+        return A_last
 
     def predict_batch(self, X):
         predictions = []
