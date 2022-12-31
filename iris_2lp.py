@@ -211,8 +211,10 @@ X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 # perceptron = Perceptron(4, 16, 3)
-activations = [sigmoid, sigmoid, sigmoid, softmax]
-perceptron = Perceptron(13, [8, 8, 4], 3, activations, loss_function=ccategorical_crossentropy)
+hidden_layers = [8, 7, 6, 5]
+hidden_layers = [16]
+activations = [sigmoid] * len(hidden_layers) + [softmax]
+perceptron = Perceptron(13, hidden_layers, 3, activations, loss_function=ccategorical_crossentropy)
 
 perceptron.train(X_train, y_train, X_test, y_test, learning_rate=0.01, epochs=800)
 
