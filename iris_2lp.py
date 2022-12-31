@@ -2,16 +2,13 @@ import numpy as np
 
 
 class Perceptron:
-    def __init__(self, num_features, num_hidden_units_1, num_hidden_units_2, num_hidden_units_3, num_classes,
-                 activations, loss_function):
+    def __init__(self, num_features, hidden_layers, num_classes, activations, loss_function):
         self.num_features = num_features
         self.activations = activations
         self.loss_function = loss_function
-        self.num_hidden_units_1 = num_hidden_units_1
-        self.num_hidden_units_2 = num_hidden_units_2
-        self.num_hidden_units_3 = num_hidden_units_3
+        self.hidden_layers = hidden_layers
         self.num_classes = num_classes
-        self.num_layers = 4
+        self.num_layers = len(hidden_layers) + 1
         self.W = []
         self.B = []
         self.Z = []
@@ -20,13 +17,13 @@ class Perceptron:
         self._init_params()
 
     def _init_params(self):
-        self.W.append(np.random.rand(self.num_hidden_units_1, self.num_features))
-        self.W.append(np.random.rand(self.num_hidden_units_2, self.num_hidden_units_1))
-        self.W.append(np.random.rand(self.num_hidden_units_3, self.num_hidden_units_2))
-        self.W.append(np.random.rand(self.num_classes, self.num_hidden_units_3))
-        self.B.append(np.random.rand(self.num_hidden_units_1))
-        self.B.append(np.random.rand(self.num_hidden_units_2))
-        self.B.append(np.random.rand(self.num_hidden_units_3))
+        self.W.append(np.random.rand(self.hidden_layers[0], self.num_features))
+        self.W.append(np.random.rand(self.hidden_layers[1], self.hidden_layers[0]))
+        self.W.append(np.random.rand(self.hidden_layers[2], self.hidden_layers[1]))
+        self.W.append(np.random.rand(self.num_classes, self.hidden_layers[2]))
+        self.B.append(np.random.rand(self.hidden_layers[0]))
+        self.B.append(np.random.rand(self.hidden_layers[1]))
+        self.B.append(np.random.rand(self.hidden_layers[2]))
         self.B.append(np.random.rand(self.num_classes))
         for _ in range(self.num_layers):
             # create list placeholders for Z and A
@@ -76,25 +73,28 @@ class Perceptron:
                 dloss_A3 = dloss_Yh
                 dloss_Z3 = np.dot(dloss_A3, self.activations[-1](self.Z[-1], der=True))
                 dloss_A2 = np.dot(self.W[-1].T, dloss_Z3)
-                dloss_W3 = np.kron(dloss_Z3, self.A[-1]).reshape(self.num_classes, self.num_hidden_units_3)
+                dloss_W3 = np.kron(dloss_Z3, self.A[-1]).reshape(self.num_classes, self.hidden_layers[2])
                 dloss_B3 = dloss_Z3
 
-                # hidden layers
+                # last hidden layer
                 last_hidden = self.num_layers - 2
                 dloss_Z2 = dloss_A2 * self.activations[last_hidden](self.Z[last_hidden], der=True)
                 dLoss_A1 = np.dot(self.W[last_hidden].T, dloss_Z2)
-                dloss_W2 = np.kron(dloss_Z2, self.A[last_hidden - 1]).reshape(self.num_hidden_units_3, self.num_hidden_units_2)
+                dloss_W2 = np.kron(dloss_Z2, self.A[last_hidden - 1]).reshape(self.hidden_layers[last_hidden],
+                                                                              self.hidden_layers[last_hidden - 1])
                 dloss_B2 = dloss_Z2
 
+                # first hidden layer
                 first_hidden = 1
                 dloss_Z1 = dLoss_A1 * self.activations[first_hidden](self.Z[first_hidden], der=True)
                 dLoss_A0 = np.dot(self.W[first_hidden].T, dloss_Z1)
-                dloss_W1 = np.kron(dloss_Z1, self.A[first_hidden-1]).reshape(self.num_hidden_units_2, self.num_hidden_units_1)
+                dloss_W1 = np.kron(dloss_Z1, self.A[first_hidden - 1]).reshape(self.hidden_layers[first_hidden],
+                                                                               self.hidden_layers[first_hidden - 1])
                 dloss_B1 = dloss_Z1
 
                 # input layer
                 dloss_Z0 = dLoss_A0 * self.activations[0](self.Z[0], der=True)
-                dloss_W0 = np.kron(dloss_Z0, x_i).reshape(self.num_hidden_units_1, self.num_features)
+                dloss_W0 = np.kron(dloss_Z0, x_i).reshape(self.hidden_layers[0], self.num_features)
                 dloss_B0 = dloss_Z0
 
                 # output layer
@@ -169,7 +169,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 # perceptron = Perceptron(4, 16, 3)
 activations = [sigmoid, sigmoid, sigmoid, softmax]
-perceptron = Perceptron(13, 8, 8, 4, 3, activations, loss_function=ccategorical_crossentropy)
+perceptron = Perceptron(13, [8, 8, 4], 3, activations, loss_function=ccategorical_crossentropy)
 
 perceptron.train(X_train, y_train, X_test, y_test, learning_rate=0.01, epochs=800)
 
