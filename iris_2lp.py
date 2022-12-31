@@ -80,14 +80,16 @@ class Perceptron:
                 dloss_B3 = dloss_Z3
 
                 # hidden layers
-                dloss_Z2 = dloss_A2 * self.activations[2](self.Z[2], der=True)
-                dLoss_A1 = np.dot(self.W[2].T, dloss_Z2)
-                dloss_W2 = np.kron(dloss_Z2, self.A[1]).reshape(self.num_hidden_units_3, self.num_hidden_units_2)
+                last_hidden = self.num_layers - 2
+                dloss_Z2 = dloss_A2 * self.activations[last_hidden](self.Z[last_hidden], der=True)
+                dLoss_A1 = np.dot(self.W[last_hidden].T, dloss_Z2)
+                dloss_W2 = np.kron(dloss_Z2, self.A[last_hidden - 1]).reshape(self.num_hidden_units_3, self.num_hidden_units_2)
                 dloss_B2 = dloss_Z2
 
-                dloss_Z1 = dLoss_A1 * self.activations[1](self.Z[1], der=True)
-                dLoss_A0 = np.dot(self.W[1].T, dloss_Z1)
-                dloss_W1 = np.kron(dloss_Z1, self.A[0]).reshape(self.num_hidden_units_2, self.num_hidden_units_1)
+                first_hidden = 1
+                dloss_Z1 = dLoss_A1 * self.activations[first_hidden](self.Z[first_hidden], der=True)
+                dLoss_A0 = np.dot(self.W[first_hidden].T, dloss_Z1)
+                dloss_W1 = np.kron(dloss_Z1, self.A[first_hidden-1]).reshape(self.num_hidden_units_2, self.num_hidden_units_1)
                 dloss_B1 = dloss_Z1
 
                 # input layer
