@@ -40,7 +40,7 @@ class Perceptron:
 
         Z3 = np.dot(self.W[2], A2) + self.B[2]
         self.Z[2] = Z3
-        A3 = self._sigmoid(Z3)
+        A3 = self._softmax(Z3)
         return A3
 
     def predict_batch(self, X):
@@ -85,7 +85,11 @@ class Perceptron:
                 self.B[0] -= learning_rate * dloss_B0
             self.losses.append(total_losses / len(x))
             if epoch % 50 == 0:
-                print(f"epoch: {epoch}; loss: {self.losses[-1]}")
+                train_cross_entripy = self._categorical_crossentropy(y, self.predict_batch(x)) / len(y)
+                print(f"epoch: {epoch}; train loss: {train_cross_entripy}")
+                val_cross_entripy = self._categorical_crossentropy(y_test, self.predict_batch(X_test)) / len(y_test)
+                print(f"validation loss: {val_cross_entripy}")
+                print()
 
     def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -130,9 +134,9 @@ X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 # perceptron = Perceptron(4, 16, 3)
-perceptron = Perceptron(4, 3, 2, 3)
+perceptron = Perceptron(4, 16, 8, 3)
 
-perceptron.train(X_train, y_train, learning_rate=0.01, epochs=100)
+perceptron.train(X_train, y_train, learning_rate=0.01, epochs=800)
 
 # predictions
 y_pred = []
