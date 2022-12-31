@@ -12,8 +12,8 @@ class Perceptron:
         self.B = []
         self.Z = []
         self.A = []
+        self.history = None
         self._init_params()
-        self.losses = []
 
     def _init_params(self):
         self.W.append(np.random.rand(self.num_hidden_units_1, self.num_features))
@@ -26,6 +26,7 @@ class Perceptron:
             # create list placeholders for Z and A
             self.Z.append(None)
             self.A.append(None)
+        self.history = {"train_loss": [], "val_loss": [], "train_acc": [], "val_acc": []}
 
     def predict_sample(self, X):
         Z1 = np.dot(self.W[0], X) + self.B[0]
@@ -49,16 +50,16 @@ class Perceptron:
             predictions.append(self.predict_sample(element))
         return np.array(predictions)
 
-    def train(self, x, y, learning_rate=0.1, epochs=100):
+    def train(self, x_train, y_train, x_test, y_test, learning_rate=0.1, epochs=100):
         for epoch in range(epochs):
             total_losses = 0
-            for i in range(len(x)):
-                x_i = np.array(x[i])
-                Yh = self.predict_sample(x[i])
-                loss = self._categorical_crossentropy(y[i], Yh)
+            for i in range(len(x_train)):
+                x_i = np.array(x_train[i])
+                Yh = self.predict_sample(x_train[i])
+                loss = self._categorical_crossentropy(y_train[i], Yh)
                 total_losses += loss
 
-                dloss_Yh = self._dcategorical_crossentropy(y[i], Yh)
+                dloss_Yh = self._dcategorical_crossentropy(y_train[i], Yh)
                 dloss_A2 = dloss_Yh
                 dloss_Z2 = np.dot(dloss_A2, self._dsoftmax(self.Z[2]))
                 dLoss_A1 = np.dot(self.W[2].T, dloss_Z2)
@@ -74,7 +75,6 @@ class Perceptron:
                 dloss_W0 = np.kron(dloss_Z0, x_i).reshape(self.num_hidden_units_1, self.num_features)
                 dloss_B0 = dloss_Z0
 
-
                 self.W[2] -= learning_rate * dloss_W2
                 self.B[2] -= learning_rate * dloss_B2
 
@@ -83,13 +83,17 @@ class Perceptron:
 
                 self.W[0] -= learning_rate * dloss_W0
                 self.B[0] -= learning_rate * dloss_B0
-            self.losses.append(total_losses / len(x))
+            # evaluate the model
+            self.history["train_acc"].append(self.score(x_train, y_train))
+            self.history["val_acc"].append(self.score(x_test, y_test))
+            self.history["train_loss"].append(
+                self._categorical_crossentropy(y_train, self.predict_batch(x_train)) / len(y_train))
+            self.history["val_loss"].append(
+                self._categorical_crossentropy(y_test, self.predict_batch(x_test)) / len(y_test))
             if epoch % 50 == 0:
-                train_cross_entripy = self._categorical_crossentropy(y, self.predict_batch(x)) / len(y)
-                print(f"epoch: {epoch}; train loss: {train_cross_entripy}")
-                val_cross_entripy = self._categorical_crossentropy(y_test, self.predict_batch(X_test)) / len(y_test)
-                print(f"validation loss: {val_cross_entripy}")
-                print()
+                print(
+                    f"epoch: {epoch}; train loss: {self.history['train_loss'][-1]}; val loss: {self.history['val_loss'][-1]}")
+                print(f"train acc: {self.history['train_acc'][-1]}; val acc: {self.history['val_acc'][-1]}\n")
 
     def score(self, X, y):
         predictions = self.predict_batch(X)
@@ -140,13 +144,12 @@ X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 # perceptron = Perceptron(4, 16, 3)
 perceptron = Perceptron(4, 16, 8, 3)
 
-perceptron.train(X_train, y_train, learning_rate=0.01, epochs=800)
+perceptron.train(X_train, y_train, X_test, y_test, learning_rate=0.01, epochs=800)
 
 # predictions
 
 
 print(perceptron.predict_batch(X_test))
-print(perceptron.losses)
 
 print(perceptron.score(X_test, y_test))
 print()
