@@ -25,10 +25,14 @@ class Perceptron:
         # self.W.append(np.random.rand(self.hidden_layers[1], self.hidden_layers[0]))
         # self.W.append(np.random.rand(self.hidden_layers[2], self.hidden_layers[1]))
         self.W.append(np.random.rand(self.num_classes, self.hidden_layers[2])) # hidden - output
-        self.B.append(np.random.rand(self.hidden_layers[0])) # input
-        self.B.append(np.random.rand(self.hidden_layers[1]))
-        self.B.append(np.random.rand(self.hidden_layers[2]))
+
+        for i in range(first_hidden, last_hidden+1):
+            self.B.append(np.random.rand(self.hidden_layers[i]))
+        # self.B.append(np.random.rand(self.hidden_layers[0])) # first hidden
+        # self.B.append(np.random.rand(self.hidden_layers[1]))
+        # self.B.append(np.random.rand(self.hidden_layers[2])) # last hidden
         self.B.append(np.random.rand(self.num_classes)) # output
+
         for _ in range(self.num_layers):
             # create list placeholders for Z and A
             self.Z.append(None)
