@@ -24,7 +24,7 @@ class Perceptron:
             self.W.append(np.random.rand(self.hidden_layers[i+1], self.hidden_layers[i]))
         # self.W.append(np.random.rand(self.hidden_layers[1], self.hidden_layers[0]))
         # self.W.append(np.random.rand(self.hidden_layers[2], self.hidden_layers[1]))
-        self.W.append(np.random.rand(self.num_classes, self.hidden_layers[2])) # hidden - output
+        self.W.append(np.random.rand(self.num_classes, self.hidden_layers[last_hidden])) # hidden - output
 
         for i in range(first_hidden, last_hidden+1):
             self.B.append(np.random.rand(self.hidden_layers[i]))
@@ -82,16 +82,18 @@ class Perceptron:
                 loss = self.loss_function(y_train[i], Yh)
                 total_losses += loss
 
+                last_hidden = self.num_layers - 2
+                first_hidden = 1
+
                 # output layer
                 dloss_Yh = self.loss_function(y_train[i], Yh, der=True)
                 dloss_A3 = dloss_Yh
                 dloss_Z3 = np.dot(dloss_A3, self.activations[-1](self.Z[-1], der=True))
                 dloss_A2 = np.dot(self.W[-1].T, dloss_Z3)
-                dloss_W3 = np.kron(dloss_Z3, self.A[-1]).reshape(self.num_classes, self.hidden_layers[2])
+                dloss_W3 = np.kron(dloss_Z3, self.A[-1]).reshape(self.num_classes, self.hidden_layers[last_hidden])
                 dloss_B3 = dloss_Z3
 
                 # last hidden layer
-                last_hidden = self.num_layers - 2
                 dloss_Z2 = dloss_A2 * self.activations[last_hidden](self.Z[last_hidden], der=True)
                 dLoss_A1 = np.dot(self.W[last_hidden].T, dloss_Z2)
                 dloss_W2 = np.kron(dloss_Z2, self.A[last_hidden - 1]).reshape(self.hidden_layers[last_hidden],
@@ -99,7 +101,6 @@ class Perceptron:
                 dloss_B2 = dloss_Z2
 
                 # first hidden layer
-                first_hidden = 1
                 dloss_Z1 = dLoss_A1 * self.activations[first_hidden](self.Z[first_hidden], der=True)
                 dLoss_A0 = np.dot(self.W[first_hidden].T, dloss_Z1)
                 dloss_W1 = np.kron(dloss_Z1, self.A[first_hidden - 1]).reshape(self.hidden_layers[first_hidden],
