@@ -99,28 +99,6 @@ class Perceptron:
                 hd_dloss_W = []
                 hd_dloss_B = []
 
-                # last hidden layer
-                # dloss_Z2 = dloss_A2 * self.activations[last_hidden](self.Z[last_hidden], der=True)
-                # hd_dloss_Z.insert(0, dloss_Z2)
-                # dLoss_A1 = np.dot(self.W[last_hidden].T, dloss_Z2)
-                # hd_dloss_A.insert(0, dLoss_A1)
-                # dloss_W2 = np.kron(dloss_Z2, self.A[last_hidden - 1]).reshape(self.hidden_layers[last_hidden],
-                #                                                               self.hidden_layers[last_hidden - 1])
-                # hd_dloss_W.insert(0, dloss_W2)
-                # dloss_B2 = dloss_Z2
-                # hd_dloss_B.insert(0, dloss_B2)
-                #
-                # # first hidden layer
-                # dloss_Z1 = dLoss_A1 * self.activations[first_hidden](self.Z[first_hidden], der=True)
-                # hd_dloss_Z.insert(0, dloss_Z1)
-                # dLoss_A0 = np.dot(self.W[first_hidden].T, dloss_Z1)
-                # hd_dloss_A.insert(0, dLoss_A0)
-                # dloss_W1 = np.kron(dloss_Z1, self.A[first_hidden - 1]).reshape(self.hidden_layers[first_hidden],
-                #                                                                self.hidden_layers[first_hidden - 1])
-                # hd_dloss_W.insert(0, dloss_W1)
-                # dloss_B1 = dloss_Z1
-                # hd_dloss_B.insert(0, dloss_B1)
-
                 for i_hd_lay in reversed(range(first_hidden, last_hidden+1)):
                     dloss_Z = dloss_A * self.activations[i_hd_lay](self.Z[i_hd_lay], der=True)
                     hd_dloss_Z.insert(0, dloss_Z)
@@ -145,12 +123,6 @@ class Perceptron:
                 for i in range(first_hidden, last_hidden):
                     self.W[i+1] -= learning_rate * hd_dloss_W[i]
                     self.B[i+1] -= learning_rate * hd_dloss_B[i]
-                # self.W[2] -= learning_rate * dloss_W2
-                # self.B[2] -= learning_rate * dloss_B2
-
-                # self.W[1] -= learning_rate * dloss_W1
-                # self.B[1] -= learning_rate * dloss_B1
-
                 # input layer
                 self.W[0] -= learning_rate * dloss_W0
                 self.B[0] -= learning_rate * dloss_B0
