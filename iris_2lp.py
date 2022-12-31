@@ -2,8 +2,10 @@ import numpy as np
 
 
 class Perceptron:
-    def __init__(self, num_features, num_hidden_units_1, num_hidden_units_2, num_hidden_units_3, num_classes):
+    def __init__(self, num_features, num_hidden_units_1, num_hidden_units_2, num_hidden_units_3, num_classes,
+                 activations):
         self.num_features = num_features
+        self.activations = activations
         self.num_hidden_units_1 = num_hidden_units_1
         self.num_hidden_units_2 = num_hidden_units_2
         self.num_hidden_units_3 = num_hidden_units_3
@@ -35,22 +37,22 @@ class Perceptron:
     def predict_sample(self, X):
         Z0 = np.dot(self.W[0], X) + self.B[0]
         self.Z[0] = Z0
-        A0 = self._sigmoid(Z0)
+        A0 = self.activations[0](Z0)
         self.A[0] = A0
 
         Z1 = np.dot(self.W[1], A0) + self.B[1]
         self.Z[1] = Z1
-        A1 = self._sigmoid(Z1)
+        A1 = self.activations[1](Z1)
         self.A[1] = A1
 
         Z2 = np.dot(self.W[2], A1) + self.B[2]
         self.Z[2] = Z2
-        A2 = self._sigmoid(Z2)
+        A2 = self.activations[2](Z2)
         self.A[2] = A2
 
         Z3 = np.dot(self.W[3], A2) + self.B[3]
         self.Z[3] = Z3
-        A3 = self._softmax(Z3)
+        A3 = self.activations[3](Z3)
         return A3
 
     def predict_batch(self, X):
@@ -71,24 +73,24 @@ class Perceptron:
                 # output layer
                 dloss_Yh = self._dcategorical_crossentropy(y_train[i], Yh)
                 dloss_A3 = dloss_Yh
-                dloss_Z3 = np.dot(dloss_A3, self._dsoftmax(self.Z[-1]))
+                dloss_Z3 = np.dot(dloss_A3, self.activations[-1](self.Z[-1], der=True))
                 dloss_A2 = np.dot(self.W[-1].T, dloss_Z3)
                 dloss_W3 = np.kron(dloss_Z3, self.A[-1]).reshape(self.num_classes, self.num_hidden_units_3)
                 dloss_B3 = dloss_Z3
 
                 # hidden layers
-                dloss_Z2 = dloss_A2 * self._dsigmoid(self.Z[2])
+                dloss_Z2 = dloss_A2 * self.activations[2](self.Z[2], der=True)
                 dLoss_A1 = np.dot(self.W[2].T, dloss_Z2)
                 dloss_W2 = np.kron(dloss_Z2, self.A[1]).reshape(self.num_hidden_units_3, self.num_hidden_units_2)
                 dloss_B2 = dloss_Z2
 
-                dloss_Z1 = dLoss_A1 * self._dsigmoid(self.Z[1])
+                dloss_Z1 = dLoss_A1 * self.activations[1](self.Z[1], der=True)
                 dLoss_A0 = np.dot(self.W[1].T, dloss_Z1)
                 dloss_W1 = np.kron(dloss_Z1, self.A[0]).reshape(self.num_hidden_units_2, self.num_hidden_units_1)
                 dloss_B1 = dloss_Z1
 
                 # input layer
-                dloss_Z0 = dLoss_A0 * self._dsigmoid(self.Z[0])
+                dloss_Z0 = dLoss_A0 * self.activations[0](self.Z[0], der=True)
                 dloss_W0 = np.kron(dloss_Z0, x_i).reshape(self.num_hidden_units_1, self.num_features)
                 dloss_B0 = dloss_Z0
 
@@ -122,19 +124,6 @@ class Perceptron:
         predictions = self.predict_batch(X)
         return np.sum(np.argmax(predictions, axis=1) == np.argmax(y, axis=1)) / len(y)
 
-    def _sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
-
-    def _dsigmoid(self, x):
-        return self._sigmoid(x) * (1 - self._sigmoid(x))
-
-    def _softmax(self, x):
-        return (np.exp(x) / np.exp(x).sum())
-
-    def _dsoftmax(self, x):
-        s = self._softmax(x)
-        return np.diag(s) - np.outer(s, s)
-
     def _categorical_crossentropy(self, y_true, y_pred):
         # Ensure that y_pred is a valid probability distribution
         y_pred = np.clip(y_pred, 1e-9, 1 - 1e-9)
@@ -143,6 +132,19 @@ class Perceptron:
 
     def _dcategorical_crossentropy(self, y_true, y_pred):
         return (y_pred - y_true) / y_true.shape
+
+
+def sigmoid(x, der=False):
+    if der:
+        return sigmoid(x) * (1 - sigmoid(x))
+    return 1 / (1 + np.exp(-x))
+
+
+def softmax(x, der=False):
+    if der:
+        s = softmax(x)
+        return np.diag(s) - np.outer(s, s)
+    return (np.exp(x) / np.exp(x).sum())
 
 
 from sklearn.preprocessing import MinMaxScaler
@@ -165,7 +167,8 @@ X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2)
 
 # perceptron = Perceptron(4, 16, 3)
-perceptron = Perceptron(4, 8, 8, 4, 3)
+activations = [sigmoid, sigmoid, sigmoid, softmax]
+perceptron = Perceptron(4, 8, 8, 4, 3, activations)
 
 perceptron.train(X_train, y_train, X_test, y_test, learning_rate=0.01, epochs=800)
 
