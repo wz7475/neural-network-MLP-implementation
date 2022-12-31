@@ -91,6 +91,10 @@ class Perceptron:
                 print(f"validation loss: {val_cross_entripy}")
                 print()
 
+    def score(self, X, y):
+        predictions = self.predict_batch(X)
+        return np.sum(np.argmax(predictions, axis=1) == np.argmax(y, axis=1)) / len(y)
+
     def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
 
@@ -139,21 +143,10 @@ perceptron = Perceptron(4, 16, 8, 3)
 perceptron.train(X_train, y_train, learning_rate=0.01, epochs=800)
 
 # predictions
-y_pred = []
-for element in X_test:
-    y_pred.append(perceptron.predict_sample(element))
 
-# accuracy
-T = 0
-F = 0
-for pred, g_truth in zip(y_pred, y_test):
-    if np.argmax(pred, axis=0) == np.where(g_truth == 1)[0][0]:
-        T += 1
-    else:
-        F += 1
 
 print(perceptron.predict_batch(X_test))
-
-print(T / (T + F))
-print()
 print(perceptron.losses)
+
+print(perceptron.score(X_test, y_test))
+print()
