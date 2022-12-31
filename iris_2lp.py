@@ -28,6 +28,7 @@ class Perceptron:
         for _ in range(self.num_layers):
             # create list placeholders for Z and A
             self.Z.append(None)
+        for _ in range(self.num_layers - 1):
             self.A.append(None)
         self.history = {"train_loss": [], "val_loss": [], "train_acc": [], "val_acc": []}
 
@@ -67,14 +68,16 @@ class Perceptron:
                 loss = self._categorical_crossentropy(y_train[i], Yh)
                 total_losses += loss
 
+                # output layer
                 dloss_Yh = self._dcategorical_crossentropy(y_train[i], Yh)
                 dloss_A3 = dloss_Yh
-                dloss_Z3 = np.dot(dloss_A3, self._dsoftmax(self.Z[3]))
-                dloss_A2 = np.dot(self.W[3].T, dloss_Z3)
-                dloss_W3 = np.kron(dloss_Z3, self.A[2]).reshape(self.num_classes, self.num_hidden_units_3)
+                dloss_Z3 = np.dot(dloss_A3, self._dsoftmax(self.Z[-1]))
+                dloss_A2 = np.dot(self.W[-1].T, dloss_Z3)
+                dloss_W3 = np.kron(dloss_Z3, self.A[-1]).reshape(self.num_classes, self.num_hidden_units_3)
                 dloss_B3 = dloss_Z3
 
-                dloss_Z2 = np.dot(dloss_A2, self._dsoftmax(self.Z[2])) # todo check
+                # hidden layers
+                dloss_Z2 = dloss_A2 * self._dsigmoid(self.Z[2])
                 dLoss_A1 = np.dot(self.W[2].T, dloss_Z2)
                 dloss_W2 = np.kron(dloss_Z2, self.A[1]).reshape(self.num_hidden_units_3, self.num_hidden_units_2)
                 dloss_B2 = dloss_Z2
@@ -84,19 +87,23 @@ class Perceptron:
                 dloss_W1 = np.kron(dloss_Z1, self.A[0]).reshape(self.num_hidden_units_2, self.num_hidden_units_1)
                 dloss_B1 = dloss_Z1
 
+                # input layer
                 dloss_Z0 = dLoss_A0 * self._dsigmoid(self.Z[0])
                 dloss_W0 = np.kron(dloss_Z0, x_i).reshape(self.num_hidden_units_1, self.num_features)
                 dloss_B0 = dloss_Z0
 
-                self.W[3] -= learning_rate * dloss_W3
-                self.B[3] -= learning_rate * dloss_B3
+                # output layer
+                self.W[-1] -= learning_rate * dloss_W3
+                self.B[-1] -= learning_rate * dloss_B3
 
+                # hidden layers
                 self.W[2] -= learning_rate * dloss_W2
                 self.B[2] -= learning_rate * dloss_B2
 
                 self.W[1] -= learning_rate * dloss_W1
                 self.B[1] -= learning_rate * dloss_B1
 
+                # input layer
                 self.W[0] -= learning_rate * dloss_W0
                 self.B[0] -= learning_rate * dloss_B0
             # evaluate the model
