@@ -88,7 +88,13 @@ class Perceptron:
                 # output layer
                 dloss_Yh = self.loss_function(y_train[i], Yh, der=True)
                 dloss_A3 = dloss_Yh
-                dloss_Z = np.dot(dloss_A3, self.activations[-1](self.Z[-1], der=True))
+                dout = self.activations[-1](self.Z[-1], der=True)
+
+                if(dout.size == 9):
+                    dloss_Z = np.dot(dloss_A3, dout)
+                else:
+                    dloss_Z = dloss_A3 * dout
+
                 dloss_A = np.dot(self.W[-1].T, dloss_Z)
                 dloss_W3 = np.kron(dloss_Z, self.A[-1]).reshape(self.num_classes, self.hidden_layers[last_hidden])
                 dloss_B3 = dloss_Z
