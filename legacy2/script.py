@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 
 # Input data files are available in the "../input/" directory.
 
-data = pd.read_csv('data/train.csv')
+data = pd.read_csv('../data/train.csv')
 
 data.head(4)
 # %% md
